@@ -13,17 +13,26 @@ export default function Header() {
   const [showInbox, setShowInbox] = useState(false);
 
   useEffect(() => {
-    const user = db.getCurrentUser();
-    if (!user) {
-      router.push("/");
-      return;
-    }
-    setCurrentUser(user);
-    loadNotifications(user.id);
-
-    // Refresh notifications every 10 seconds (in case club admin sends one in background)
-    const interval = setInterval(() => {
+    // 1. Initial background sync
+    db.syncFromSupabase().then(() => {
+      const user = db.getCurrentUser();
+      if (!user) {
+        router.push("/");
+        return;
+      }
+      setCurrentUser(user);
       loadNotifications(user.id);
+    });
+
+    // 2. Poll Supabase for live updates every 10 seconds
+    const interval = setInterval(() => {
+      db.syncFromSupabase().then(() => {
+        const user = db.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          loadNotifications(user.id);
+        }
+      });
     }, 10000);
     return () => clearInterval(interval);
   }, []);

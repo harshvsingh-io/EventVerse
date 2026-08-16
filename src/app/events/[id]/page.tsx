@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { db, Event, PingCategory, Club, User, EventComment } from "@/lib/db";
+import { db, Event, PingCategory, Club, User, EventComment, generateUUID } from "@/lib/db";
 import { MapPin, Calendar, Heart, Share2, Bookmark, ArrowLeft, Send, ArrowUpRight } from "lucide-react";
 
 export default function EventDetailPage({ params }: { params: any }) {
@@ -134,7 +134,7 @@ export default function EventDetailPage({ params }: { params: any }) {
 
     const allComments = db.getEventComments();
     const newComment: EventComment = {
-      id: 'ec-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       eventId: event.id,
       userId: currentUser.id,
       userName: currentUser.name,

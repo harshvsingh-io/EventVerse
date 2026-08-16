@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { db, College, User, PingCategory, Club } from "@/lib/db";
+import { db, College, User, PingCategory, Club, generateUUID } from "@/lib/db";
 import { Search, Compass, Rocket, Bell, ShieldCheck, Mail, UserCheck, ArrowRight, Check, Users, Shield, BookOpen, Sparkles } from "lucide-react";
 
 export default function LandingPage() {
@@ -33,14 +33,16 @@ export default function LandingPage() {
   const [selectedPings, setSelectedPings] = useState<string[]>([]);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const user = db.getCurrentUser();
-    if (user) {
-      redirectUser(user);
-    }
-    
-    // Load colleges
-    setColleges(db.getColleges().filter(c => c.status === "approved"));
+    db.syncFromSupabase().then(() => {
+      // Check if user is already logged in
+      const user = db.getCurrentUser();
+      if (user) {
+        redirectUser(user);
+      }
+      
+      // Load colleges
+      setColleges(db.getColleges().filter(c => c.status === "approved"));
+    });
   }, []);
 
   const filteredColleges = colleges.filter(c =>
@@ -181,7 +183,7 @@ export default function LandingPage() {
 
     const clubs = db.getClubs();
     const newClub: Club = {
-      id: 'club-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       collegeId: selectedCollege.id,
       name: clubName,
       logoUrl: clubLogoUrl,

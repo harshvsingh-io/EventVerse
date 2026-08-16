@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { db, Event, PingCategory, Club, User } from "@/lib/db";
+import { db, Event, PingCategory, Club, User, generateUUID } from "@/lib/db";
 import { Plus, Edit, Trash2, Calendar, MapPin, BarChart3, AlertCircle, RefreshCw, Send, CheckCircle } from "lucide-react";
 
 export default function ClubDashboard() {
@@ -153,7 +153,7 @@ export default function ClubDashboard() {
       }
     } else {
       const newEvent: Event = {
-        id: 'e-' + Math.random().toString(36).substr(2, 9),
+        id: generateUUID(),
         clubId: myClub.id,
         collegeId: currentUser.collegeId,
         pingCategoryId: catId,

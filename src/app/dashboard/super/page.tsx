@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { db, College, User } from "@/lib/db";
+import { db, College, User, generateUUID } from "@/lib/db";
 import { Shield, Check, X, RefreshCw, Mail, Plus, AlertCircle, Calendar } from "lucide-react";
 
 export default function SuperDashboard() {
@@ -79,7 +79,7 @@ export default function SuperDashboard() {
       return;
     }
 
-    const newCollegeId = 'c-' + Math.random().toString(36).substr(2, 9);
+    const newCollegeId = generateUUID();
     const newCollege: College = {
       id: newCollegeId,
       name: newCollegeName,
@@ -91,7 +91,7 @@ export default function SuperDashboard() {
     // Create the College Admin user for that college
     const currentUsers = db.getUsers();
     const newAdmin: User = {
-      id: 'u-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       collegeId: newCollegeId,
       name: adminName,
       email: adminEmail,

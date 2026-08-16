@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { db, User, CommunityPost, CommunityComment } from "@/lib/db";
+import { db, User, CommunityPost, CommunityComment, generateUUID } from "@/lib/db";
 import { MessageSquare, Flag, Heart, Send, Plus, ArrowUp, CheckCircle, ShieldAlert } from "lucide-react";
 
 export default function CommunityPage() {
@@ -61,7 +61,7 @@ export default function CommunityPage() {
 
     const currentPosts = db.getPosts();
     const newPost: CommunityPost = {
-      id: 'p-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       collegeId: currentUser.collegeId,
       userId: currentUser.id,
       userName: currentUser.name,
@@ -134,7 +134,7 @@ export default function CommunityPage() {
 
     const currentComments = db.getPostComments();
     const newComment: CommunityComment = {
-      id: 'cc-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       postId,
       userId: currentUser.id,
       userName: currentUser.name,

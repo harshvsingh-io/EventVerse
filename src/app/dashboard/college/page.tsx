@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { db, Event, PingCategory, Club, User, CommunityPost } from "@/lib/db";
+import { db, Event, PingCategory, Club, User, CommunityPost, generateUUID } from "@/lib/db";
 import { Shield, Users, RefreshCw, Layers, Check, Trash2, ShieldAlert, Plus, Award, AlertTriangle, BarChart3 } from "lucide-react";
 
 export default function CollegeDashboard() {
@@ -93,7 +93,7 @@ export default function CollegeDashboard() {
     }
 
     const newCat: PingCategory = {
-      id: 'cat-' + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       collegeId: currentUser.collegeId,
       name: newCatName,
       color: newCatColor,
@@ -133,7 +133,7 @@ export default function CollegeDashboard() {
       return;
     }
 
-    const newUserId = 'u-' + Math.random().toString(36).substr(2, 9);
+    const newUserId = generateUUID();
     const newAdmin: User = {
       id: newUserId,
       collegeId: currentUser.collegeId,
@@ -144,7 +144,7 @@ export default function CollegeDashboard() {
       createdAt: new Date().toISOString()
     };
 
-    const newClubId = 'club-' + Math.random().toString(36).substr(2, 9);
+    const newClubId = generateUUID();
     const newClub: Club = {
       id: newClubId,
       collegeId: currentUser.collegeId,
