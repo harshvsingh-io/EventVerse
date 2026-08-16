@@ -1,6 +1,8 @@
 # EventVerse 🚀
 ### *Your Campus. Your Universe of Events.*
 
+👉 **Live Demo:** [https://event-verse-taupe.vercel.app/](https://event-verse-taupe.vercel.app/)
+
 > **"College event info is scattered across fragmented WhatsApp groups and Instagram stories — students miss events they'd actually attend. EventVerse gives every college its own isolated, notification-powered event universe."**
 
 EventVerse is a multi-tenant university notification and event network built using **Next.js (App Router)**, **Tailwind CSS**, **Supabase**, and **Resend**. It enforces strict data isolation between campuses and protects student inboxes through a unique broadcast cooldown system.
