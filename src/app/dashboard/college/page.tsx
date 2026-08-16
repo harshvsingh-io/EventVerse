@@ -413,13 +413,13 @@ export default function CollegeDashboard() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {cdStatus.isBlocked && (
+                        {club.lastPingSentAt && (
                           <button
                             onClick={() => handleOverrideCooldown(club.id)}
                             className="bg-brand-secondary/10 hover:bg-brand-secondary/20 text-brand-secondary py-1.5 px-3 rounded-lg border border-brand-secondary/20 text-[10px] uppercase font-bold flex items-center gap-1"
                           >
                             <RefreshCw className="w-3.5 h-3.5" />
-                            <span>Override Cooldown</span>
+                            <span>Reset Cooldown</span>
                           </button>
                         )}
 
@@ -434,6 +434,68 @@ export default function CollegeDashboard() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Recent Uploaded Events Log */}
+            <div className="space-y-4 pt-6 border-t border-white/5">
+              <div>
+                <h4 className="font-display font-bold text-base text-white">Recent Club Uploads & Broadcast Activity</h4>
+                <p className="text-xs text-gray-400">Track which club uploaded what event, who posted it, and reset their cooldown limits.</p>
+              </div>
+
+              {events.length > 0 ? (
+                <div className="glass-card rounded-xl overflow-hidden border border-white/5">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/2">
+                          <th className="p-3 font-semibold text-gray-400">Event Title</th>
+                          <th className="p-3 font-semibold text-gray-400">Club</th>
+                          <th className="p-3 font-semibold text-gray-400">Uploaded On</th>
+                          <th className="p-3 font-semibold text-gray-400">Posted By</th>
+                          <th className="p-3 font-semibold text-gray-400">Status</th>
+                          <th className="p-3 font-semibold text-gray-400 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-y-white/5">
+                        {events.map((event) => {
+                          const eventClub = clubs.find(c => c.id === event.clubId);
+                          const creator = users.find(u => u.id === event.createdBy);
+                          return (
+                            <tr key={event.id} className="hover:bg-white/1 text-gray-300">
+                              <td className="p-3 font-semibold text-white">{event.title}</td>
+                              <td className="p-3">{eventClub?.name || "Unknown Club"}</td>
+                              <td className="p-3">{new Date(event.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                              <td className="p-3">{creator?.name || "Club Representative"}</td>
+                              <td className="p-3">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status === 'published' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
+                                  {event.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right">
+                                {eventClub?.lastPingSentAt && (
+                                  <button
+                                    onClick={() => handleOverrideCooldown(eventClub.id)}
+                                    className="bg-brand-secondary/10 hover:bg-brand-secondary/20 text-brand-secondary py-1 px-2.5 rounded-lg border border-brand-secondary/20 text-[9px] uppercase font-bold inline-flex items-center gap-1"
+                                    title="Reset this club's cooldown"
+                                  >
+                                    <RefreshCw className="w-3 h-3" />
+                                    <span>Reset Cooldown</span>
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-dashed border-white/5 rounded-xl">
+                  <p className="text-xs text-gray-500">No events uploaded by any club yet.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
