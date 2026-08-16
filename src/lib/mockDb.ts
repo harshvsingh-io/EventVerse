@@ -12,7 +12,13 @@ if (typeof window !== "undefined" && supabaseUrl && supabaseKey) {
   try {
     const trimmedUrl = supabaseUrl.trim();
     if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
-      supabaseInstance = createClient(trimmedUrl, supabaseKey);
+      supabaseInstance = createClient(trimmedUrl, supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      });
     } else {
       console.warn("[Supabase] Invalid URL protocol. Must start with http:// or https://. Got:", trimmedUrl);
     }
