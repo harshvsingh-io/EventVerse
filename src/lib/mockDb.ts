@@ -6,9 +6,22 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-export const supabase = (typeof window !== "undefined" && supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey) 
-  : null;
+
+let supabaseInstance = null;
+if (typeof window !== "undefined" && supabaseUrl && supabaseKey) {
+  try {
+    const trimmedUrl = supabaseUrl.trim();
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+      supabaseInstance = createClient(trimmedUrl, supabaseKey);
+    } else {
+      console.warn("[Supabase] Invalid URL protocol. Must start with http:// or https://. Got:", trimmedUrl);
+    }
+  } catch (e) {
+    console.error("[Supabase] Failed to initialize client:", e);
+  }
+}
+
+export const supabase = supabaseInstance;
 
 export function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
