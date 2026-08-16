@@ -308,20 +308,7 @@ class LocalDatabase {
   async syncFromSupabase() {
     if (!supabase) return;
     try {
-      const [
-        collegesRes,
-        usersRes,
-        clubsRes,
-        categoriesRes,
-        eventsRes,
-        subsRes,
-        likesRes,
-        savesRes,
-        notifsRes,
-        postsRes,
-        postCommentsRes,
-        eventCommentsRes
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         supabase.from("colleges").select("*"),
         supabase.from("users").select("*"),
         supabase.from("clubs").select("*"),
@@ -336,11 +323,33 @@ class LocalDatabase {
         supabase.from("event_comments").select("*")
       ]);
 
-      if (collegesRes.data && collegesRes.data.length > 0) {
-        this.setStorageItem('ev_colleges', collegesRes.data);
+      // Extract values safely
+      const getVal = (index: number) => {
+        const item = results[index];
+        if (item && item.status === 'fulfilled' && item.value && item.value.data) {
+          return item.value.data;
+        }
+        return [];
+      };
+
+      const collegesData = getVal(0);
+      const usersData = getVal(1);
+      const clubsData = getVal(2);
+      const categoriesData = getVal(3);
+      const eventsData = getVal(4);
+      const subsData = getVal(5);
+      const likesData = getVal(6);
+      const savesData = getVal(7);
+      const notifsData = getVal(8);
+      const postsData = getVal(9);
+      const postCommentsData = getVal(10);
+      const eventCommentsData = getVal(11);
+
+      if (collegesData.length > 0) {
+        this.setStorageItem('ev_colleges', collegesData);
       }
-      if (usersRes.data && usersRes.data.length > 0) {
-        this.setStorageItem('ev_users', usersRes.data.map((u: any) => ({
+      if (usersData.length > 0) {
+        this.setStorageItem('ev_users', usersData.map((u: any) => ({
           id: u.id,
           collegeId: u.college_id,
           name: u.name,
@@ -350,8 +359,8 @@ class LocalDatabase {
           createdAt: u.created_at
         })));
       }
-      if (clubsRes.data && clubsRes.data.length > 0) {
-        this.setStorageItem('ev_clubs', clubsRes.data.map((c: any) => ({
+      if (clubsData.length > 0) {
+        this.setStorageItem('ev_clubs', clubsData.map((c: any) => ({
           id: c.id,
           collegeId: c.college_id,
           name: c.name,
@@ -362,8 +371,8 @@ class LocalDatabase {
           createdAt: c.created_at
         })));
       }
-      if (categoriesRes.data && categoriesRes.data.length > 0) {
-        this.setStorageItem('ev_categories', categoriesRes.data.map((c: any) => ({
+      if (categoriesData.length > 0) {
+        this.setStorageItem('ev_categories', categoriesData.map((c: any) => ({
           id: c.id,
           collegeId: c.college_id,
           name: c.name,
@@ -372,8 +381,8 @@ class LocalDatabase {
           createdAt: c.created_at
         })));
       }
-      if (eventsRes.data) {
-        this.setStorageItem('ev_events', eventsRes.data.map((e: any) => ({
+      if (eventsData.length > 0) {
+        this.setStorageItem('ev_events', eventsData.map((e: any) => ({
           id: e.id,
           clubId: e.club_id,
           collegeId: e.college_id,
@@ -390,26 +399,26 @@ class LocalDatabase {
           updatedAt: e.updated_at
         })));
       }
-      if (subsRes.data) {
-        this.setStorageItem('ev_subscriptions', subsRes.data.map((s: any) => ({
+      if (subsData.length > 0) {
+        this.setStorageItem('ev_subscriptions', subsData.map((s: any) => ({
           userId: s.user_id,
           categoryId: s.ping_category_id
         })));
       }
-      if (likesRes.data) {
-        this.setStorageItem('ev_likes', likesRes.data.map((l: any) => ({
+      if (likesData.length > 0) {
+        this.setStorageItem('ev_likes', likesData.map((l: any) => ({
           userId: l.user_id,
           eventId: l.event_id
         })));
       }
-      if (savesRes.data) {
-        this.setStorageItem('ev_saves', savesRes.data.map((s: any) => ({
+      if (savesData.length > 0) {
+        this.setStorageItem('ev_saves', savesData.map((s: any) => ({
           userId: s.user_id,
           eventId: s.event_id
         })));
       }
-      if (notifsRes.data) {
-        this.setStorageItem('ev_notifications', notifsRes.data.map((n: any) => ({
+      if (notifsData.length > 0) {
+        this.setStorageItem('ev_notifications', notifsData.map((n: any) => ({
           id: n.id,
           userId: n.user_id,
           eventId: n.event_id || undefined,
@@ -420,9 +429,9 @@ class LocalDatabase {
           read: n.read
         })));
       }
-      if (postsRes.data) {
-        this.setStorageItem('ev_posts', postsRes.data.map((p: any) => {
-          const author = usersRes.data?.find((u: any) => u.id === p.user_id);
+      if (postsData.length > 0) {
+        this.setStorageItem('ev_posts', postsData.map((p: any) => {
+          const author = usersData.find((u: any) => u.id === p.user_id);
           return {
             id: p.id,
             collegeId: p.college_id,
@@ -432,15 +441,15 @@ class LocalDatabase {
             title: p.title,
             body: p.body || '',
             imageUrl: p.image_url || '',
-            likes: likesRes.data?.filter((l: any) => l.event_id === p.id).map((l: any) => l.user_id) || [],
+            likes: likesData.filter((l: any) => l.event_id === p.id).map((l: any) => l.user_id) || [],
             flagged: p.flagged || false,
             createdAt: p.created_at
           };
         }));
       }
-      if (postCommentsRes.data) {
-        this.setStorageItem('ev_post_comments', postCommentsRes.data.map((c: any) => {
-          const author = usersRes.data?.find((u: any) => u.id === c.user_id);
+      if (postCommentsData.length > 0) {
+        this.setStorageItem('ev_post_comments', postCommentsData.map((c: any) => {
+          const author = usersData.find((u: any) => u.id === c.user_id);
           return {
             id: c.id,
             postId: c.post_id,
@@ -452,9 +461,9 @@ class LocalDatabase {
           };
         }));
       }
-      if (eventCommentsRes.data) {
-        this.setStorageItem('ev_event_comments', eventCommentsRes.data.map((c: any) => {
-          const author = usersRes.data?.find((u: any) => u.id === c.user_id);
+      if (eventCommentsData.length > 0) {
+        this.setStorageItem('ev_event_comments', eventCommentsData.map((c: any) => {
+          const author = usersData.find((u: any) => u.id === c.user_id);
           return {
             id: c.id,
             eventId: c.event_id,
@@ -468,7 +477,7 @@ class LocalDatabase {
       }
       console.log("[Supabase] Global state synced successfully.");
     } catch (err) {
-      console.error("[Supabase] Sync failed:", err);
+      console.error("[Supabase] Sync failed silently:", err);
     }
   }
 
