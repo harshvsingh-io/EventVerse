@@ -7,6 +7,45 @@ EventVerse is a multi-tenant university notification and event network built usi
 
 ---
 
+## 🔑 Demo Login & Testing Guide (For Judges)
+
+Every role on EventVerse has a pre-configured demo account. 
+*   **Verification Code / OTP for all accounts:** `123456`
+
+| Role | Demo Email Address | Purpose & Dashboard Access |
+| :--- | :--- | :--- |
+| **Super Admin** | `super@eventverse.com` | Cross-college registry, whitelists, and domain onboarding. |
+| **College Admin (Dean)** | `admin@jaipur.manipal.edu` | Club approvals, category creations, discussion moderation queue, and emergency cooldown overrides. |
+| **Club Leader (Coding)** | `codingclub@jaipur.manipal.edu` | CRUD events, 48h ping cooldown locks, and view engagement vector charts. |
+| **Club Leader (Music)** | `musicclub@jaipur.manipal.edu` | Alternate club representative panel. |
+| **Campus Student A** | `kabir.verma@learner.manipal.edu` | Chronological flyer feed, bookmark saves, comments, upvotes, and subscription settings. |
+| **Campus Student B** | `ananya.sharma@learner.manipal.edu` | Alternate student account for testing upvote counters. |
+
+---
+
+## 🚀 How to Test the 1-Click Email & Notification System
+
+EventVerse supports a **dual notification pipeline** (In-app Web DMs + SMTP Resend Emails). You can test this loop using the following steps:
+
+### Loop 1: Testing In-App Web Alerts (No Setup Required)
+1. Log in as **Campus Student A** (`kabir.verma@learner.manipal.edu` / OTP: `123456`). Go to **Settings** and ensure you are subscribed to **"Hackathons"** or **"Music & Cultural"** pings.
+2. Logout, and log in as the **Club Leader (Coding)** (`codingclub@jaipur.manipal.edu` / OTP: `123456`).
+3. Click **"Blast Ping"** next to a published event, tick **"Notify on Web"**, and click **"Fire Broadcast"**.
+4. Log back into **Student A**'s account. The top navigation bell will glow with an unread badge. Click it to view the notification DM and tap to navigate to the event details.
+
+### Loop 2: Testing Real Emails (1-Click Delivery)
+1. Make sure your Resend API Key is added inside the `.env.local` file at the root:
+   ```env
+   RESEND_API_KEY=re_your_api_key
+   ```
+2. Restart the local server (`npm run dev`).
+3. Register/Sign up on the home screen using the **real email address** you registered on your Resend developer dashboard (sandbox only permits sending to your own registered account).
+4. Select the **"Club Representative"** role on signup and configure your club details.
+5. Create a new event, click **"Blast Ping"**, check **"Notify via Email"**, and click **"Fire Broadcast"**.
+6. Check your real mailbox! You will receive a responsive HTML email containing the vertical flyer banner, details grid, and active registration button.
+
+---
+
 ## 🌟 Pitch Points for Judges
 
 1. **Strict Tenant Data Isolation**: Enforced at the Postgres database level using **Row Level Security (RLS)**. Student accounts are scoped by `college_id` via JWT parameters - a user from College A can never read or query announcements belonging to College B.
@@ -22,20 +61,6 @@ EventVerse is a multi-tenant university notification and event network built usi
 - **Database & Auth**: Supabase (Postgres with custom RLS SQL policies)
 - **Notifications**: Resend REST API (styled transactional email templates)
 - **Icons**: Lucide React
-
----
-
-## 🚀 Key Features
-
-- **Multi-tenant Onboarding**: Landing selector whitelists campus domains and assigns user roles (Student, Organizer, Dean) immediately on signup.
-- **Widescreen Admin Consoles**:
-  - *Platform Super Admin*: Onboard campus domains without violating college-level data boundaries.
-  - *College Dean (Admin)*: Invite/approve clubs, monitor flagged posts, custom-create channels, and override cooldowns during emergencies.
-  - *Club Representative*: Build events, track ticking cooldown timers, and check engagement vector charts.
-- **Chronological Flyer Feed**: Responsive feed supporting category filters, bookmarks, likes, shares, and search.
-- **Community Forum**: General campus discussions supporting Reddit-style upvoting, inline comment drawers, and flag moderation.
-- **Event Detail & Calendar**: Full layout details page with integrated client-side `.ics` download calendar invitation generators.
-- **Preferences Panel**: Subscriptions manager enabling students to select or opt-out of notification categories anytime.
 
 ---
 
@@ -80,20 +105,8 @@ eventverse/
    npm install
    ```
 
-3. **Configure Environment Variables**:
-   Create a `.env.local` file at the root:
-   ```env
-   # Add your Resend API Key for sending real emails
-   RESEND_API_KEY=re_your_api_key_here
-   ```
-
-4. **Run the Development Server**:
+3. **Run the Development Server**:
    ```bash
    npm run dev
    ```
    Open `http://localhost:3000` inside your browser.
-
-5. **Sandbox Test Mode**:
-   - Register using your personal email.
-   - Select the **Club Leader** role during onboarding to create your organization.
-   - Create an event, click **Blast Ping**, tick **Notify via Email**, and check your real inbox! (Sandbox sends emails to the address registered on the Resend account).
