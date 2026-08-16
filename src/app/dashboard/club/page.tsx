@@ -39,6 +39,7 @@ export default function ClubDashboard() {
   const [notifyEmail, setNotifyEmail] = useState(false);
   const [showPingModal, setShowPingModal] = useState(false);
   const [pingTargetEvent, setPingTargetEvent] = useState<Event | null>(null);
+  const [testEmail, setTestEmail] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -213,19 +214,27 @@ export default function ClubDashboard() {
     }
 
     // 2. Dispatch real API requests for email notifications
-    if (notifyEmail) {
+    if (notifyEmail || testEmail.trim()) {
       const subs = db.getSubscriptions().filter(s => s.categoryId === pingTargetEvent.pingCategoryId);
       const subUserIds = new Set(subs.map(s => s.userId));
       const targetUsers = db.getUsers().filter(u => u.collegeId === pingTargetEvent.collegeId && subUserIds.has(u.id));
       const category = categories.find(c => c.id === pingTargetEvent.pingCategoryId);
 
+      const recipientEmails = new Set<string>();
+      if (notifyEmail) {
+        targetUsers.forEach(u => recipientEmails.add(u.email));
+      }
+      if (testEmail.trim()) {
+        recipientEmails.add(testEmail.trim());
+      }
+
       try {
-        const fetchPromises = targetUsers.map(user => 
+        const fetchPromises = Array.from(recipientEmails).map(email => 
           fetch("/api/send-ping", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: user.email,
+              email: email,
               eventTitle: pingTargetEvent.title,
               clubName: myClub.name,
               categoryName: category?.name || "Campus Events",
@@ -241,13 +250,13 @@ export default function ClubDashboard() {
         );
         
         await Promise.all(fetchPromises);
-        console.log(`[Announcements] DM messages and Resend email broadcasts dispatched successfully!`);
+        console.log(`[Announcements] Dispatched emails to ${recipientEmails.size} recipients:`, Array.from(recipientEmails));
       } catch (err) {
         console.error("Error triggering Resend email endpoint:", err);
       }
     }
 
-    setSuccess(`Ping blast sent successfully via ${notifyWeb ? 'Web' : ''} ${notifyEmail ? 'and Email' : ''}!`);
+    setSuccess(`Ping blast sent successfully via ${notifyWeb ? 'Web' : ''} ${(notifyEmail || testEmail.trim()) ? 'and Email' : ''}!`);
     setShowPingModal(false);
     loadClubData(myClub.id, currentUser.collegeId);
   };
@@ -697,17 +706,37 @@ export default function ClubDashboard() {
               </div>
             </div>
 
+            {/* Test Email Input */}
+            <div className="space-y-1.5 mb-6 pt-3 border-t border-white/5">
+              <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">
+                Send Test Copy Directly (Optional)
+              </label>
+              <input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="e.g. judge-email@gmail.com"
+                className="w-full glass-input rounded-xl p-2.5 text-xs text-white bg-white/5 border border-white/5 focus:border-brand-primary"
+              />
+              <p className="text-[9px] text-gray-500">
+                Enter any email to receive a live announcement email directly, bypassing student subscription rules.
+              </p>
+            </div>
+
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
               <button
                 type="button"
-                onClick={() => setShowPingModal(false)}
+                onClick={() => {
+                  setTestEmail("");
+                  setShowPingModal(false);
+                }}
                 className="px-4 py-2 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-400 hover:text-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendPing}
-                disabled={!notifyWeb && !notifyEmail}
+                disabled={!notifyWeb && !notifyEmail && !testEmail.trim()}
                 className="bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>Fire Broadcast</span>
