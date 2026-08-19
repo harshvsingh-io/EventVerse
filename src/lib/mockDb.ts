@@ -284,12 +284,17 @@ class LocalDatabase {
   private getStorageItem<T>(key: string, defaultValue: T): T {
     if (typeof window === 'undefined') return defaultValue;
     const item = localStorage.getItem(key);
-    if (!item) {
+    if (!item || item === "null" || item === "undefined") {
       localStorage.setItem(key, JSON.stringify(defaultValue));
       return defaultValue;
     }
     try {
-      return JSON.parse(item);
+      const parsed = JSON.parse(item);
+      if (parsed === null || parsed === undefined) {
+        localStorage.setItem(key, JSON.stringify(defaultValue));
+        return defaultValue;
+      }
+      return parsed;
     } catch {
       return defaultValue;
     }
