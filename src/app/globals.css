@@ -38,8 +38,17 @@ body {
   background-clip: text;
 }
 
+.text-gradient-white {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.85) 50%, rgba(255, 255, 255, 0.45) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .bg-nebula {
   background: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #db2777 100%);
+  background-size: 200% 200%;
+  animation: cosmic-shift 6s ease infinite;
 }
 
 .bg-nebula-hover {
@@ -47,31 +56,47 @@ body {
 }
 
 .glass-card {
-  background: rgba(12, 12, 22, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(12, 12, 22, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 40px 0 rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.35);
+  box-shadow: 0 15px 45px 0 rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px) scale(1.002);
+}
+
+.glass-glow-card {
+  background: rgba(10, 10, 18, 0.7);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(124, 58, 237, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-glow-card:hover {
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow: 0 20px 50px rgba(124, 58, 237, 0.2), 0 0 30px rgba(124, 58, 237, 0.1);
   transform: translateY(-2px);
 }
 
 .glass-input {
-  background: rgba(12, 12, 22, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 8, 14, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: #ffffff;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-input:focus {
-  border-color: rgba(124, 58, 237, 0.5);
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15), 0 0 15px rgba(124, 58, 237, 0.1);
   outline: none;
+  background: rgba(10, 10, 18, 0.85);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -107,16 +132,22 @@ body {
 /* Orb animations */
 @keyframes float {
   0% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-20px) scale(1.05); }
+  50% { transform: translateY(-15px) scale(1.03); }
   100% { transform: translateY(0px) scale(1); }
 }
 
+@keyframes cosmic-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 .animate-float-slow {
-  animation: float 8s ease-in-out infinite;
+  animation: float 10s ease-in-out infinite;
 }
 
 .animate-float-medium {
-  animation: float 6s ease-in-out infinite;
+  animation: float 7s ease-in-out infinite;
 }
 
 .animate-float-fast {
