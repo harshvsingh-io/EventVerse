@@ -242,6 +242,8 @@ export default function FeedPage() {
             <div className="space-y-8 max-w-lg mx-auto">
               {filteredEvents.map((event) => {
                 const club = clubs.find(c => c.id === event.clubId);
+                const clubAdminUser = db.getUsers().find(u => u.id === club?.adminUserId);
+                const clubUsername = clubAdminUser?.username || 'club';
                 const category = categories.find(c => c.id === event.pingCategoryId);
                 const isLiked = likes.includes(event.id);
                 const isSaved = saves.includes(event.id);
@@ -258,7 +260,7 @@ export default function FeedPage() {
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <h4 className="font-semibold text-xs text-white hover:underline cursor-pointer" onClick={() => router.push(`/profile/${club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'club'}`)}>{club?.name || "College Club"}</h4>
+                            <h4 className="font-semibold text-xs text-white hover:underline cursor-pointer" onClick={() => router.push(`/club/${clubUsername}`)}>{club?.name || "College Club"}</h4>
                             <span className="w-3.5 h-3.5 rounded-full bg-brand-secondary/20 flex items-center justify-center border border-brand-secondary/30 text-brand-secondary" title="Official Verified Club">
                               <Check className="w-2 h-2 stroke-[3]" />
                             </span>
@@ -340,8 +342,8 @@ export default function FeedPage() {
                       </div>
 
                       <div className="text-xs text-gray-200 leading-relaxed">
-                        <span className="font-bold text-white mr-2 hover:underline cursor-pointer" onClick={() => router.push(`/profile/${club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'club'}`)}>
-                          {club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '') || "club"}
+                        <span className="font-bold text-white mr-2 hover:underline cursor-pointer" onClick={() => router.push(`/club/${clubUsername}`)}>
+                          {club?.name || "club"}
                         </span>
                         <span className="font-semibold text-white block text-sm mt-1">{event.title}</span>
                         <p className="text-gray-400 mt-1 line-clamp-2">{event.description}</p>

@@ -153,6 +153,18 @@ export default function UsernameOnboardingPage() {
 
       setSuccess("Profile registered successfully!");
 
+      // 2.5 Dispatch Welcome Email asynchronously via Resend
+      fetch("/api/send-welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentUser.email,
+          name: fullName.trim(),
+          username: lowerUsername,
+          role: finalRole
+        })
+      }).catch(err => console.error("Failed to trigger welcome email dispatcher:", err));
+
       // 3. Update local storage session data to force immediate re-render
       const mappedUser: User = {
         id: currentUser.id,

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { db, College, User, PingCategory, Club, generateUUID } from "@/lib/db";
+import { supabase } from "@/lib/supabaseClient";
 import { 
   Search, 
   Compass, 
@@ -106,6 +107,21 @@ export default function LandingPage() {
       router.push("/dashboard/club");
     } else {
       router.push("/feed");
+    }
+  };
+
+  const handleOAuthLogin = async (provider: "google" | "azure") => {
+    setError("");
+    try {
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/onboarding/username`
+        }
+      });
+      if (err) throw err;
+    } catch (err: any) {
+      setError(err.message || "Failed to initiate OAuth login flow.");
     }
   };
 
@@ -663,8 +679,44 @@ export default function LandingPage() {
                     <button onClick={() => setStep("college")} className="text-[10px] text-brand-secondary hover:underline">Change</button>
                   </div>
 
+                  {error && <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">{error}</div>}
+
+                  {/* Real OAuth Buttons */}
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => handleOAuthLogin("azure")}
+                      className="w-full bg-white hover:bg-neutral-100 text-black rounded-xl py-3 px-4 font-bold text-[10px] tracking-widest uppercase flex items-center justify-center gap-3.5 transition-all active:scale-[0.98] cursor-pointer shadow-lg"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 23 23">
+                        <path fill="#f35022" d="M0 0h11v11H0z"/>
+                        <path fill="#7fba00" d="M12 0h11v11H12z"/>
+                        <path fill="#00a4ef" d="M0 12h11v11H0z"/>
+                        <path fill="#ffb900" d="M12 12h11v11H12z"/>
+                      </svg>
+                      <span>Verify Student Microsoft</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleOAuthLogin("google")}
+                      className="w-full bg-white/5 hover:bg-white/10 text-white rounded-xl py-3 px-4 font-bold text-[10px] tracking-widest uppercase border border-white/10 flex items-center justify-center gap-3.5 transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.9h6.69c-.29 1.5-.113 2.76-.99 3.76v3.13h1.61c.94-.87 1.68-2.15 2.13-3.66.45-1.51.52-3.13.31-5.06z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.13-2.42c-.87.58-1.99.93-3.23.93-2.48 0-4.58-1.68-5.33-3.95H1.61v2.5C3.21 21.09 7.36 24 12 24z"/>
+                        <path fill="#FBBC05" d="M6.67 15.65c-.19-.58-.3-1.2-.3-1.84s.11-1.26.3-1.84V9.47H1.61A11.96 11.96 0 000 13.81c0 1.55.3 3.06.87 4.46l5.8-4.62z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.22 0 12 0 7.36 0 3.21 2.91 1.61 6.81l5.06 4.03c.75-2.27 2.85-3.95 5.33-3.95z"/>
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-3 text-[9px] text-gray-500 uppercase tracking-widest font-bold my-4">
+                    <span className="h-[1px] flex-1 bg-white/5"></span>
+                    <span>or use fallback credentials</span>
+                    <span className="h-[1px] flex-1 bg-white/5"></span>
+                  </div>
+
                   <form onSubmit={handleSendOTP} className="space-y-4">
-                    {error && <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">{error}</div>}
                     {!isLogin && (
                       <div className="space-y-1">
                         <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Full Name</label>

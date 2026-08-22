@@ -49,6 +49,14 @@ export interface User {
   isVerified: boolean;
 }
 
+export interface Follow {
+  id: string;
+  followerId: string;
+  followingUserId: string | null;
+  followingClubId: string | null;
+  createdAt?: string;
+}
+
 export interface Club {
   id: string;
   collegeId: string;
@@ -342,6 +350,54 @@ class LocalDatabase {
     { userId: 'u-student1', eventId: 'e1' }
   ]); }
   getNotifications(): Notification[] { return this.getStorageItem('ev_notifications', []); }
+  getFollows(): Follow[] { return this.getStorageItem('ev_follows', []); }
+
+  setFollows(fl: Follow[]) {
+    const old = this.getFollows();
+    this.setStorageItem('ev_follows', fl);
+    if (supabase) {
+      const diff = fl.filter(item => {
+        const matching = old.find(o => o.id === item.id);
+        return !matching || JSON.stringify(matching) !== JSON.stringify(item);
+      });
+      diff.forEach(item => {
+        supabase.from('follows').upsert({
+          id: toUUID(item.id),
+          follower_id: toUUID(item.followerId),
+          following_user_id: item.followingUserId ? toUUID(item.followingUserId) : null,
+          following_club_id: item.followingClubId ? toUUID(item.followingClubId) : null
+        });
+      });
+    }
+  }
+
+  toggleFollow(followerId: string, targetId: string, isClub: boolean) {
+    const follows = this.getFollows();
+    const existingIdx = follows.findIndex(f => 
+      f.followerId === followerId && 
+      (isClub ? f.followingClubId === targetId : f.followingUserId === targetId)
+    );
+
+    if (existingIdx !== -1) {
+      const deletedItem = follows[existingIdx];
+      follows.splice(existingIdx, 1);
+      this.setStorageItem('ev_follows', follows);
+      if (supabase) {
+        supabase.from('follows').delete().eq('id', deletedItem.id).then(res => {
+          if (res.error) console.error("Supabase delete follows error:", res.error);
+        });
+      }
+    } else {
+      const newFollow: Follow = {
+        id: generateUUID(),
+        followerId,
+        followingUserId: isClub ? null : targetId,
+        followingClubId: isClub ? targetId : null
+      };
+      follows.push(newFollow);
+      this.setFollows(follows);
+    }
+  }
 
   // Sync from Supabase Cloud
   async syncFromSupabase() {
@@ -359,7 +415,8 @@ class LocalDatabase {
         supabase.from("notifications_log").select("*"),
         supabase.from("community_posts").select("*"),
         supabase.from("community_comments").select("*"),
-        supabase.from("event_comments").select("*")
+        supabase.from("event_comments").select("*"),
+        supabase.from("follows").select("*")
       ]);
 
       // Extract values safely
@@ -518,6 +575,16 @@ class LocalDatabase {
             createdAt: c.created_at
           };
         }));
+      }
+      const followsData = getVal(12);
+      if (followsData.length > 0) {
+        this.setStorageItem('ev_follows', followsData.map((f: any) => ({
+          id: f.id,
+          followerId: f.follower_id,
+          followingUserId: f.following_user_id,
+          followingClubId: f.following_club_id,
+          createdAt: f.created_at
+        })));
       }
       console.log("[Supabase] Global state synced successfully.");
     } catch (err) {
