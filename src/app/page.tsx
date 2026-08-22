@@ -3,7 +3,30 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { db, College, User, PingCategory, Club, generateUUID } from "@/lib/db";
-import { Search, Compass, Rocket, Bell, ShieldCheck, Mail, UserCheck, ArrowRight, Check, Users, Shield, BookOpen, Sparkles } from "lucide-react";
+import { 
+  Search, 
+  Compass, 
+  Rocket, 
+  Bell, 
+  ShieldCheck, 
+  Mail, 
+  UserCheck, 
+  ArrowRight, 
+  Check, 
+  Users, 
+  Shield, 
+  BookOpen, 
+  Sparkles,
+  ArrowUpRight,
+  Globe,
+  Clock,
+  ChevronRight,
+  X,
+  ExternalLink,
+  MessageSquare
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ConstellationCanvas from "@/components/ConstellationCanvas";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -13,7 +36,8 @@ export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   
-  // Form states
+  // Form/Modal states
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -32,6 +56,9 @@ export default function LandingPage() {
   const [categories, setCategories] = useState<PingCategory[]>([]);
   const [selectedPings, setSelectedPings] = useState<string[]>([]);
 
+  // Featured showcase events (static for visual storytelling)
+  const [sampleEvents, setSampleEvents] = useState<any[]>([]);
+
   useEffect(() => {
     db.syncFromSupabase().then(() => {
       // Check if user is already logged in
@@ -41,8 +68,28 @@ export default function LandingPage() {
       }
       
       // Load colleges
-      setColleges(db.getColleges().filter(c => c.status === "approved"));
+      const approvedColleges = db.getColleges().filter(c => c.status === "approved");
+      setColleges(approvedColleges);
+
+      // Load 3 events for visual showcases
+      setSampleEvents(db.getEvents().slice(0, 3));
     });
+  }, []);
+
+  // Keyboard shortcut listener (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.getElementById("campus-search-input");
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const filteredColleges = colleges.filter(c =>
@@ -65,6 +112,7 @@ export default function LandingPage() {
   const handleSelectCollege = (college: College) => {
     setSelectedCollege(college);
     setStep("auth");
+    setShowOnboarding(true);
     setError("");
   };
 
@@ -94,7 +142,7 @@ export default function LandingPage() {
       !email.endsWith("eventverse.com") && // Support super admin testing
       !isPersonalEmail
     ) {
-      setError(`Please use your official college email. Whitelisted domain: @${selectedCollege.domain} (Or use your personal Gmail/Outlook for testing).`);
+      setError(`Please use your official college email. Whitelisted domain: @${selectedCollege.domain} (Or use personal Gmail for testing).`);
       return;
     }
 
@@ -125,6 +173,7 @@ export default function LandingPage() {
     if (isLogin) {
       const result = db.login(email, otp);
       if (result.success && result.user) {
+        setShowOnboarding(false);
         redirectUser(result.user);
       } else {
         setError(result.error || "Login failed");
@@ -166,6 +215,7 @@ export default function LandingPage() {
         setStep("club_setup");
       } else {
         // College admin goes straight to college dashboard
+        setShowOnboarding(false);
         redirectUser(updatedUser);
       }
     }
@@ -197,6 +247,7 @@ export default function LandingPage() {
     db.setClubs(clubs);
 
     setSuccess("Club registered and configured!");
+    setShowOnboarding(false);
     redirectUser(createdUser);
   };
 
@@ -220,443 +271,627 @@ export default function LandingPage() {
     db.setSubscriptions(cleanSubs);
 
     // Redirect
+    setShowOnboarding(false);
     redirectUser(createdUser);
   };
 
   return (
-    <div className="relative min-h-screen bg-[#06060c] text-white flex flex-col justify-between overflow-hidden font-sans">
-      {/* Decorative Orbs */}
-      <div className="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-brand-primary/12 blur-[130px] animate-float-slow pointer-events-none"></div>
-      <div className="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-brand-secondary/12 blur-[130px] animate-float-medium pointer-events-none"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-brand-accent/5 blur-[120px] animate-float-fast pointer-events-none"></div>
+    <div className="relative min-h-screen bg-[#030307] text-[#f5f5f7] flex flex-col justify-between overflow-x-hidden font-sans select-none selection:bg-brand-primary/20">
+      
+      {/* 1. Interactive Constellation Particles Layer */}
+      <ConstellationCanvas />
 
-      {/* Header */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-secondary flex items-center justify-center shadow-lg shadow-brand-primary/20">
-            <span className="font-display font-bold text-xl text-white tracking-widest">E</span>
+      {/* Grid Overlay Lines (Linear-look details) */}
+      <div className="absolute inset-0 line-grid-x opacity-20 pointer-events-none"></div>
+      <div className="absolute inset-0 line-grid-y opacity-20 pointer-events-none"></div>
+
+      {/* Radial Spotlights (Color Depth) */}
+      <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] rounded-full glow-spotlight-violet pointer-events-none"></div>
+      <div className="absolute bottom-[10%] right-[10%] w-[600px] h-[600px] rounded-full glow-spotlight-blue pointer-events-none"></div>
+
+      {/* ==========================================
+          HEADER NAVBAR (Transparent -> Blur Scroll)
+          ========================================== */}
+      <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#030307]/10 backdrop-blur-md transition-all py-5">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => router.push("/")}>
+            <div className="w-8.5 h-8.5 rounded-lg bg-gradient-to-tr from-brand-primary to-brand-secondary flex items-center justify-center shadow-lg shadow-brand-primary/10">
+              <span className="font-display font-black text-md text-white tracking-widest">E</span>
+            </div>
+            <div>
+              <h1 className="font-display font-black text-sm tracking-widest leading-none bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">EVENTVERSE</h1>
+              <p className="text-[8px] tracking-wider text-brand-secondary uppercase font-bold mt-0.5">Your Campus. Your Universe.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display font-bold text-xl tracking-tight leading-none bg-gradient-to-r from-white via-[#f5f5f7] to-gray-500 bg-clip-text text-transparent">EventVerse</h1>
-            <p className="text-[10px] text-brand-secondary uppercase tracking-widest font-semibold mt-0.5">Your Campus. Your Universe.</p>
+
+          {/* Desktop Nav Items */}
+          <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold tracking-widest uppercase text-white/50">
+            <a href="#hero" className="hover:text-white transition-colors">Explore</a>
+            <a href="#search" className="hover:text-white transition-colors">Campuses</a>
+            <a href="#features" className="hover:text-white transition-colors">Safety</a>
+            <a href="#showcase" className="hover:text-white transition-colors">Constellations</a>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => {
+                const testUser = db.getUsers().find(u => u.email === "kabir.verma@learner.manipal.edu");
+                if (testUser) {
+                  db.setCurrentUser(testUser);
+                  router.push("/feed");
+                }
+              }}
+              className="text-[10px] font-bold tracking-widest uppercase text-white/70 hover:text-white transition-all py-2.5 px-4.5 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 active:scale-95 cursor-pointer"
+            >
+              Guest Demo
+            </button>
+            <button 
+              onClick={() => {
+                setStep("college");
+                setShowOnboarding(true);
+              }}
+              className="text-[10px] font-bold tracking-widest uppercase bg-brand-primary hover:bg-brand-primary/95 text-white py-2.5 px-5 rounded-xl active:scale-95 transition-all cursor-pointer shadow-lg shadow-brand-primary/15"
+            >
+              Get Started
+            </button>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => {
-              // Direct login for demo users
-              const testUser = db.getUsers().find(u => u.email === "kabir.verma@learner.manipal.edu");
-              if (testUser) {
-                db.setCurrentUser(testUser);
-                router.push("/feed");
-              }
-            }}
-            className="text-xs font-semibold text-gray-300 hover:text-white transition-all py-1.5 px-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-brand-secondary/30 active:scale-95 shadow-inner cursor-pointer"
-          >
-            Quick Guest Demo
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto w-full px-6 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 py-12">
-        {/* Left Side: Hero Brand Message */}
-        <div className="flex-1 text-center lg:text-left space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-inner text-xs text-brand-secondary font-medium">
-            <Compass className="w-3.5 h-3.5 text-brand-secondary" />
-            <span>Multi-Tenant Campus Network</span>
-          </div>
-          <h2 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.15] text-white">
-            Your Campus. <br />
-            <span className="text-nebula">Your Universe of Events.</span>
-          </h2>
-          <p className="text-gray-400 text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed">
-            College event info is scattered across WhatsApp groups and Instagram stories. EventVerse gives every campus its own isolated, notification-powered event hub.
-          </p>
- 
-          {/* Core App Pitch Points */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto lg:mx-0 pt-6">
-            <div className="flex items-start gap-3 text-left">
-              <div className="p-2 rounded-lg bg-brand-primary/10 border border-brand-primary/20 text-brand-primary mt-1">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-200">DB Tenant Isolation</h4>
-                <p className="text-xs text-gray-400">Strict isolation guarantees data privacy per college.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 text-left">
-              <div className="p-2 rounded-lg bg-brand-secondary/10 border border-brand-secondary/20 text-brand-secondary mt-1">
-                <Bell className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-200">Zero Spam Rule</h4>
-                <p className="text-xs text-gray-400">A strict 48-hour ping cooldown forces clubs to send high-value digest emails.</p>
-              </div>
-            </div>
+      {/* ==========================================
+          HERO SECTION
+          ========================================== */}
+      <section id="hero" className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-20 pb-24 flex flex-col items-center text-center space-y-10">
+        
+        {/* Animated Eyebrow */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/3 border border-white/5 text-[9px] font-bold uppercase tracking-[0.25em] text-brand-secondary"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-brand-secondary" />
+          <span>The Campus Event Network</span>
+        </motion.div>
+
+        {/* Cinematic Headline */}
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15 }}
+          className="font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-[0.95] text-gradient-expensive"
+        >
+          YOUR CAMPUS.<br />
+          YOUR UNIVERSE.
+        </motion.h2>
+
+        {/* Cinematic Supporting Text */}
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="text-white/60 text-sm sm:text-base max-w-xl mx-auto leading-relaxed tracking-wide"
+        >
+          Discover events, constellation channels, and official announcements happening across your university — all synced into one secure, noise-free network.
+        </motion.p>
+
+        {/* Call to Actions */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.45 }}
+          className="flex flex-col sm:flex-row items-center gap-4 justify-center"
+        >
+          <a
+            href="#search"
+            className="w-full sm:w-auto text-[10px] font-bold tracking-widest uppercase bg-white hover:bg-neutral-100 text-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer shadow-xl shadow-white/5"
+          >
+            <span>Explore Your Campus</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+          
+          <button
+            onClick={() => {
+              setStep("college");
+              setShowOnboarding(true);
+            }}
+            className="w-full sm:w-auto text-[10px] font-bold tracking-widest uppercase bg-white/3 hover:bg-white/5 border border-white/5 text-white py-4 px-8 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <span>Open Entry Portal</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <div className="pt-16 animate-bounce opacity-30 pointer-events-none">
+          <div className="w-5 h-9 rounded-full border border-white/30 flex items-start justify-center p-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
           </div>
         </div>
- 
-        {/* Right Side: Onboarding Panel */}
-        <div className="w-full max-w-md animate-float-medium">
-          <div className="glass-glow-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-            {/* Nebula Ambient Light behind card */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+      </section>
 
-            {/* Wizard Stepper Progress Bar */}
-            <div className="flex items-center gap-1.5 mb-6 px-0.5 pointer-events-none">
-              <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['college', 'auth', 'otp', 'roles', 'club_setup', 'categories'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
-              <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['auth', 'otp', 'roles', 'club_setup', 'categories'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
-              <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['otp', 'roles', 'club_setup', 'categories'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
-              <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['roles', 'club_setup', 'categories'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
+      {/* ==========================================
+          CAMPUS SELECTOR (Cmd+K styled)
+          ========================================== */}
+      <section id="search" className="relative z-10 max-w-4xl mx-auto w-full px-6 py-20 border-t border-white/5">
+        <div className="glass-glow-card rounded-3xl p-8 sm:p-12 space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-20 h-20 bg-brand-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div className="space-y-2 text-center sm:text-left">
+            <h3 className="font-display font-extrabold text-2xl tracking-tight text-white uppercase">Find Your Campus</h3>
+            <p className="text-xs text-white/50 leading-relaxed max-w-md">
+              Enter your college name or official domain to enter its isolated event universe.
+            </p>
+          </div>
+
+          {/* Command Search Console */}
+          <div className="relative group">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+              <Search className="w-4 h-4" />
+            </span>
+            <input
+              id="campus-search-input"
+              type="text"
+              placeholder="Search by college name or domain..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full glass-input rounded-2xl py-4.5 pl-11 pr-24 text-xs font-semibold focus:border-brand-primary/60 placeholder-gray-600"
+            />
+            {/* Cmd+K visual key indicator */}
+            <div className="absolute right-3.5 top-3.5 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-bold text-gray-500 pointer-events-none">
+              <span>⌘</span>
+              <span>K</span>
             </div>
- 
-            {/* STEP 1: SELECT COLLEGE */}
-            {step === "college" && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="font-display font-bold text-2xl text-white">Find Your Campus</h3>
-                  <p className="text-sm text-gray-400">Select your college to enter your university's event universe.</p>
-                </div>
+          </div>
 
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                    <Search className="w-4 h-4" />
-                  </span>
+          {/* Selector Results list */}
+          <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+            {filteredColleges.length > 0 ? (
+              filteredColleges.map((college) => (
+                <div
+                  key={college.id}
+                  onClick={() => handleSelectCollege(college)}
+                  className="w-full flex items-center justify-between p-4.5 rounded-2xl border border-white/5 bg-white/3 hover:bg-brand-primary/5 hover:border-brand-primary/30 transition-all text-left group cursor-pointer active:scale-[0.99]"
+                >
+                  <div>
+                    <h4 className="font-bold text-xs text-white group-hover:text-brand-primary transition-colors">{college.name}</h4>
+                    <span className="text-[10px] text-gray-500">@{college.domain}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold tracking-widest uppercase text-brand-secondary/80 opacity-0 group-hover:opacity-100 transition-all">Enter</span>
+                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 group-hover:text-brand-primary transition-all" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 bg-white/3 rounded-2xl border border-dashed border-white/5 text-xs text-gray-500 space-y-2">
+                <p className="font-semibold text-gray-400">Your campus hasn't joined the universe yet.</p>
+                <a 
+                  href="mailto:support@eventverse.com?subject=Onboard Request for Campus"
+                  className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase text-brand-secondary hover:underline"
+                >
+                  <span>Request campus onboarding</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          EDITORIAL FEATURE SHOWCASE SECTION
+          ========================================== */}
+      <section id="features" className="relative z-10 max-w-7xl mx-auto w-full px-6 py-24 border-t border-white/5 space-y-16">
+        
+        <div className="space-y-3.5 text-center max-w-xl mx-auto">
+          <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-brand-secondary">Core Architecture</span>
+          <h3 className="font-display font-extrabold text-3xl sm:text-5xl tracking-tight uppercase leading-none">Built for every campus.</h3>
+          <p className="text-xs text-white/50 leading-relaxed">
+            Strict isolation guidelines and structural design guarantees event announcements remain high-signal.
+          </p>
+        </div>
+
+        {/* Asymmetric Editorial layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Feature 1 */}
+          <div className="lg:col-span-7 glass-card rounded-3xl p-8 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+            <span className="font-display font-black text-6xl text-white/5 tracking-tighter self-end absolute top-6 right-6">01</span>
+            <div className="space-y-4 max-w-sm mt-12">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-brand-primary">RLS Network Protection</span>
+              <h4 className="font-display font-bold text-xl text-white">Your campus, isolated.</h4>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Strict multi-tenant row level security constraints prevent cross-college details leak. Your university network remains entirely private.
+              </p>
+            </div>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="lg:col-span-5 glass-card rounded-3xl p-8 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+            <span className="font-display font-black text-6xl text-white/5 tracking-tighter self-end absolute top-6 right-6">02</span>
+            <div className="space-y-4 max-w-xs mt-12">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-brand-secondary">Blast Rate Cooldowns</span>
+              <h4 className="font-display font-bold text-xl text-white">Less noise. More signal.</h4>
+              <p className="text-xs text-white/60 leading-relaxed">
+                A hard 48-hour email notification cooldown on club accounts forces organizers to publish meaningful, combined digests rather than spamming student inboxes.
+              </p>
+            </div>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="lg:col-span-12 glass-card rounded-3xl p-8 sm:p-10 relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 min-h-[220px]">
+            <span className="font-display font-black text-6xl text-white/5 tracking-tighter absolute top-6 right-6 lg:static">03</span>
+            <div className="space-y-4 max-w-lg">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-pink-500">Decentralized Channels</span>
+              <h4 className="font-display font-bold text-xl text-white">Everything happening around you in one place.</h4>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Subscribe directly to constellation categories like Tech Talks, Hackathons, or Music sunset jams. Receive DMs when clubs announce verified agendas.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setStep("college");
+                setShowOnboarding(true);
+              }}
+              className="text-[10px] font-bold tracking-widest uppercase bg-white hover:bg-neutral-100 text-black py-4.5 px-8 rounded-2xl active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2 shrink-0 self-stretch lg:self-auto text-center justify-center"
+            >
+              <span>Explore Network</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          CONSTELLATION CARD SHOWCASE (Visual Storytelling)
+          ========================================== */}
+      <section id="showcase" className="relative z-10 max-w-7xl mx-auto w-full px-6 py-20 border-t border-white/5 space-y-12">
+        <div className="space-y-3.5 text-center sm:text-left">
+          <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-brand-secondary">Explore Constellations</span>
+          <h3 className="font-display font-extrabold text-2xl sm:text-4xl uppercase leading-none">Active Constellation stars</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {sampleEvents.map((item, idx) => (
+            <div 
+              key={item.id || idx}
+              onClick={() => {
+                setStep("college");
+                setShowOnboarding(true);
+              }}
+              className="glass-card rounded-2xl overflow-hidden cursor-pointer group border border-white/5 pb-5 flex flex-col justify-between h-[360px]"
+            >
+              {item.bannerImageUrl && (
+                <div className="aspect-[16/10] overflow-hidden bg-neutral-900 border-b border-white/5">
+                  <img
+                    src={item.bannerImageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  />
+                </div>
+              )}
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div className="space-y-2">
+                  <span className="text-[8px] font-bold tracking-widest uppercase text-brand-primary">CONSTELLATION STAR</span>
+                  <h4 className="font-display font-bold text-md text-white group-hover:text-brand-secondary transition-colors line-clamp-1">{item.title}</h4>
+                  <p className="text-xs text-white/50 line-clamp-2 leading-relaxed">{item.description}</p>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-gray-500 font-bold uppercase tracking-wider border-t border-white/5 pt-3 mt-3">
+                  <span>📅 {new Date(item.eventDate).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                  <span className="truncate max-w-[120px]">📍 {item.venue}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==========================================
+          INTERACTIVE ONBOARDING WIZARD OVERLAY MODAL
+          ========================================== */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-md bg-[#0a0a14] border border-white/10 rounded-3xl p-6 sm:p-8 relative overflow-hidden space-y-6"
+            >
+              {/* Nebula light flare in modal */}
+              <div className="absolute top-0 right-0 w-28 h-28 bg-brand-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+
+              {/* Close Button */}
+              <button 
+                onClick={() => setShowOnboarding(false)}
+                className="absolute top-4.5 right-4.5 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 cursor-pointer text-gray-400 hover:text-white"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+
+              {/* Wizard Stepper progress */}
+              <div className="flex items-center gap-1.5 px-0.5 pointer-events-none">
+                <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['college', 'auth', 'otp', 'roles', 'club_setup', 'pings'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
+                <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['auth', 'otp', 'roles', 'club_setup', 'pings'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
+                <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['otp', 'roles', 'club_setup', 'pings'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
+                <span className={`h-1 flex-1 rounded-full transition-all duration-500 ${['roles', 'club_setup', 'pings'].includes(step) ? 'bg-brand-primary' : 'bg-white/10'}`}></span>
+              </div>
+
+              {/* STEP 1: SELECT CAMPUS */}
+              {step === "college" && (
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <h3 className="font-display font-bold text-xl text-white uppercase">Choose Campus</h3>
+                    <p className="text-xs text-gray-400">Select campus domain to verify whitelists</p>
+                  </div>
                   <input
                     type="text"
                     placeholder="Search by college name or domain..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full glass-input rounded-xl py-3 pl-10 pr-4 text-sm"
+                    className="w-full glass-input rounded-xl p-3 text-xs"
                   />
-                </div>
-
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {filteredColleges.length > 0 ? (
-                    filteredColleges.map((college) => (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {filteredColleges.map((c) => (
                       <button
-                        key={college.id}
-                        onClick={() => handleSelectCollege(college)}
-                        className="w-full flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-brand-primary/30 transition-all text-left group"
+                        key={c.id}
+                        onClick={() => handleSelectCollege(c)}
+                        className="w-full flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 transition-all text-left text-xs"
                       >
                         <div>
-                          <h4 className="font-semibold text-sm text-white group-hover:text-brand-primary transition-colors">{college.name}</h4>
-                          <span className="text-xs text-gray-400">@{college.domain}</span>
+                          <h4 className="font-bold text-white">{c.name}</h4>
+                          <span className="text-[10px] text-gray-500">@{c.domain}</span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       </button>
-                    ))
-                  ) : (
-                    <div className="text-center py-6 text-gray-500 text-sm">
-                      No registered colleges found. Contact platform admin to request onboarding.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2: USER AUTH (LOGIN / SIGNUP) */}
-            {step === "auth" && selectedCollege && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                  <div>
-                    <h3 className="font-display font-bold text-xl text-white">{isLogin ? "Log In" : "Sign Up"}</h3>
-                    <p className="text-xs text-gray-400">Campus: {selectedCollege.name}</p>
+                    ))}
                   </div>
-                  <button
-                    onClick={() => setStep("college")}
-                    className="text-xs text-brand-secondary hover:underline"
-                  >
-                    Change College
-                  </button>
                 </div>
+              )}
 
-                <form onSubmit={handleSendOTP} className="space-y-4">
-                  {error && (
-                    <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg">
-                      {error}
+              {/* STEP 2: USER AUTH (LOGIN / SIGNUP) */}
+              {step === "auth" && selectedCollege && (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <div>
+                      <h3 className="font-display font-bold text-lg text-white uppercase">{isLogin ? "Log In" : "Sign Up"}</h3>
+                      <p className="text-[10px] text-gray-500">Campus: {selectedCollege.name}</p>
                     </div>
-                  )}
+                    <button onClick={() => setStep("college")} className="text-[10px] text-brand-secondary hover:underline">Change</button>
+                  </div>
 
-                  {!isLogin && (
-                    <div className="space-y-1.5">
-                      <label className="text-xs text-gray-400 font-medium">Full Name</label>
+                  <form onSubmit={handleSendOTP} className="space-y-4">
+                    {error && <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">{error}</div>}
+                    {!isLogin && (
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="Aarav Sharma"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full glass-input rounded-xl p-3 text-xs"
+                          required
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">College Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                        <input
+                          type="email"
+                          placeholder={`you@${selectedCollege.domain}`}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full glass-input rounded-xl py-3 pl-10 pr-4 text-xs"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <button type="submit" className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-brand-primary/15 transition-all">
+                      <span>Receive OTP Code</span>
+                      <Rocket className="w-4 h-4" />
+                    </button>
+                  </form>
+                  <div className="text-center">
+                    <button onClick={() => { setIsLogin(!isLogin); setError(""); }} className="text-[10px] text-gray-400 hover:text-white transition-colors">
+                      {isLogin ? "Don't have an account? Sign Up" : "Already registered? Log In"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: OTP CODE VERIFICATION */}
+              {step === "otp" && (
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <h3 className="font-display font-bold text-xl text-white uppercase">Enter OTP</h3>
+                    <p className="text-xs text-gray-400">We've sent a demo code to <span className="text-gray-200 font-semibold">{email}</span></p>
+                  </div>
+
+                  <form onSubmit={handleVerifyOTP} className="space-y-4">
+                    {error && <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">{error}</div>}
+                    {success && <div className="p-3 text-xs bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl leading-normal">{success}</div>}
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Verification Code</label>
                       <input
                         type="text"
-                        placeholder="Aarav Sharma"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full glass-input rounded-xl p-3 text-sm"
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-center tracking-widest text-base font-bold"
                         required
                       />
                     </div>
-                  )}
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-gray-400 font-medium">College Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
+                    <button type="submit" className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all">
+                      <span>Verify & Enter</span>
+                      <UserCheck className="w-4 h-4" />
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* STEP 4: ROLE SELECTOR */}
+              {step === "roles" && (
+                <div className="space-y-5">
+                  <div className="space-y-1">
+                    <h3 className="font-display font-bold text-lg text-white uppercase">Select Campus Role</h3>
+                    <p className="text-xs text-gray-400">Shape your dashboard and publication levels</p>
+                  </div>
+                  <div className="space-y-3">
+                    <button onClick={() => handleRoleSelect("student")} className="w-full flex items-start gap-3 p-4 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-brand-primary/30 text-left transition-all active:scale-[0.99] cursor-pointer">
+                      <div className="p-2 rounded-lg bg-brand-primary/10 text-brand-primary mt-0.5"><BookOpen className="w-4.5 h-4.5" /></div>
+                      <div>
+                        <h4 className="font-bold text-xs text-white">Campus Student</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Subscribe to categories and save events.</p>
+                      </div>
+                    </button>
+                    <button onClick={() => handleRoleSelect("club_admin")} className="w-full flex items-start gap-3 p-4 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-brand-secondary/30 text-left transition-all active:scale-[0.99] cursor-pointer">
+                      <div className="p-2 rounded-lg bg-brand-secondary/10 text-brand-secondary mt-0.5"><Users className="w-4.5 h-4.5" /></div>
+                      <div>
+                        <h4 className="font-bold text-xs text-white">Club Leader</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Register club and publish announcement pings.</p>
+                      </div>
+                    </button>
+                    <button onClick={() => handleRoleSelect("college_admin")} className="w-full flex items-start gap-3 p-4 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-pink-500/30 text-left transition-all active:scale-[0.99] cursor-pointer">
+                      <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 mt-0.5"><Shield className="w-4.5 h-4.5" /></div>
+                      <div>
+                        <h4 className="font-bold text-xs text-white">College Administrator</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Moderate campus database and approve clubs.</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 5: CLUB SETUP DETAILS */}
+              {step === "club_setup" && (
+                <div className="space-y-5">
+                  <div className="space-y-1">
+                    <h3 className="font-display font-bold text-lg text-white uppercase">Register Club</h3>
+                    <p className="text-xs text-gray-400">Configure your organization's campus profile</p>
+                  </div>
+                  <form onSubmit={handleClubSetup} className="space-y-4">
+                    {error && <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">{error}</div>}
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Club Name *</label>
                       <input
-                        type="email"
-                        placeholder={`you@${selectedCollege.domain}`}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full glass-input rounded-xl py-3 pl-10 pr-4 text-sm"
+                        type="text"
+                        placeholder="e.g. BITS Robotics Club"
+                        value={clubName}
+                        onChange={(e) => setClubName(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-xs"
                         required
                       />
                     </div>
-                    <span className="text-[10px] text-gray-500 block leading-tight">
-                      Must end in @{selectedCollege.domain} to verify domain whitelist.
-                    </span>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-brand-primary/20 transition-all active:scale-[0.98]"
-                  >
-                    <span>Receive OTP Code</span>
-                    <Rocket className="w-4 h-4" />
-                  </button>
-                </form>
-
-                <div className="text-center pt-2">
-                  <button
-                    onClick={() => {
-                      setIsLogin(!isLogin);
-                      setError("");
-                    }}
-                    className="text-xs text-gray-400 hover:text-white transition-colors"
-                  >
-                    {isLogin ? "Don't have an account? Sign Up" : "Already registered? Log In"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: OTP VERIFICATION */}
-            {step === "otp" && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="font-display font-bold text-2xl text-white">Enter OTP</h3>
-                  <p className="text-sm text-gray-400">We've sent a 6-digit code to <span className="text-gray-200">{email}</span></p>
-                </div>
-
-                <form onSubmit={handleVerifyOTP} className="space-y-4">
-                  {error && (
-                    <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg font-medium">
-                      {error}
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Logo URL</label>
+                      <input
+                        type="url"
+                        value={clubLogoUrl}
+                        onChange={(e) => setClubLogoUrl(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-xs"
+                      />
                     </div>
-                  )}
-
-                  {success && (
-                    <div className="p-3 text-xs bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg leading-relaxed">
-                      {success}
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Description</label>
+                      <textarea
+                        value={clubDesc}
+                        onChange={(e) => setClubDesc(e.target.value)}
+                        className="w-full glass-input rounded-xl p-3 text-xs"
+                        rows={2}
+                      />
                     </div>
-                  )}
+                    <button type="submit" className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 text-xs font-bold cursor-pointer">
+                      Create Organization Profile
+                    </button>
+                  </form>
+                </div>
+              )}
 
+              {/* STEP 6: SUBSCRIBED CATEGORIES */}
+              {step === "pings" && (
+                <div className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-gray-400 font-medium">Verification Code</label>
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="w-full glass-input rounded-xl p-3 text-center tracking-widest text-lg font-bold"
-                      required
-                    />
+                    <h3 className="font-display font-bold text-lg text-white uppercase">Subscribe to Pings</h3>
+                    <p className="text-xs text-gray-400 font-semibold">Select interests to verify push frequency DMs</p>
                   </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
-                  >
-                    <span>Verify & Enter</span>
-                    <UserCheck className="w-4 h-4" />
-                  </button>
-                </form>
-
-                <div className="text-center pt-2">
-                  <button
-                    onClick={() => {
-                      setStep("auth");
-                      setError("");
-                    }}
-                    className="text-xs text-gray-400 hover:text-white transition-colors"
-                  >
-                    Go Back / Edit Email
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: ROLE SELECTION */}
-            {step === "roles" && (
-              <div className="space-y-6">
-                <div className="space-y-1.5">
-                  <h3 className="font-display font-bold text-xl text-white">Select Campus Role</h3>
-                  <p className="text-xs text-gray-400">Choose your privilege level on campus. This shapes your dashboard access.</p>
-                </div>
-
-                <div className="space-y-3">
-                  <button
-                    onClick={() => handleRoleSelect("student")}
-                    className="w-full flex items-start gap-4 p-5 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-brand-primary/40 hover:scale-[1.01] text-left transition-all duration-300 active:scale-[0.99] group cursor-pointer shadow-lg shadow-black/20"
-                  >
-                    <div className="p-2 rounded-lg bg-brand-primary/10 text-brand-primary mt-0.5 group-hover:scale-105 transition-transform">
-                      <BookOpen className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white group-hover:text-brand-primary transition-colors">Campus Student</h4>
-                      <p className="text-[11px] text-gray-400 leading-normal mt-0.5">
-                        Subscribe to ping channels, save events, upvote on general forum boards, and receive DM digests.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleRoleSelect("club_admin")}
-                    className="w-full flex items-start gap-4 p-5 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-brand-secondary/40 hover:scale-[1.01] text-left transition-all duration-300 active:scale-[0.99] group cursor-pointer shadow-lg shadow-black/20"
-                  >
-                    <div className="p-2 rounded-lg bg-brand-secondary/10 text-brand-secondary mt-0.5 group-hover:scale-105 transition-transform">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white group-hover:text-brand-secondary transition-colors">Club Leader / Representative</h4>
-                      <p className="text-[11px] text-gray-400 leading-normal mt-0.5">
-                        Register your club, create events with custom flyers, draft emails, and broadcast direct alerts to subscribers.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleRoleSelect("college_admin")}
-                    className="w-full flex items-start gap-4 p-5 rounded-xl border border-white/5 bg-white/3 hover:bg-white/8 hover:border-pink-500/40 hover:scale-[1.01] text-left transition-all duration-300 active:scale-[0.99] group cursor-pointer shadow-lg shadow-black/20"
-                  >
-                    <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 mt-0.5 group-hover:scale-105 transition-transform">
-                      <Shield className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white group-hover:text-pink-400 transition-colors">College Dean / Administrator</h4>
-                      <p className="text-[11px] text-gray-400 leading-normal mt-0.5">
-                        Moderate the campus, invite/approve registered clubs, configure categories, and reset broadcast cooldowns.
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 5: CLUB SETUP DETAILS (FOR CLUB LEADERS) */}
-            {step === "club_setup" && (
-              <div className="space-y-6">
-                <div className="space-y-1.5">
-                  <h3 className="font-display font-bold text-xl text-white">Create Club Profile</h3>
-                  <p className="text-xs text-gray-400">Provide details to register your organization's campus profile.</p>
-                </div>
-
-                <form onSubmit={handleClubSetup} className="space-y-4">
-                  {error && (
-                    <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg">
-                      {error}
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-gray-400 font-medium">Club / Association Name *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. BITS Robotics Club"
-                      value={clubName}
-                      onChange={(e) => setClubName(e.target.value)}
-                      className="w-full glass-input rounded-xl p-3 text-sm"
-                      required
-                    />
+                  <div className="flex flex-wrap gap-2 py-2">
+                    {categories.map((c) => {
+                      const isSel = selectedPings.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => handlePingToggle(c.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold cursor-pointer transition-all ${
+                            isSel 
+                              ? "bg-brand-primary/20 text-white border-brand-primary scale-105"
+                              : "bg-white/3 text-gray-400 border-white/5 hover:bg-white/8 hover:text-white"
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color }}></span>
+                          <span>{c.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-gray-400 font-medium">Club Logo URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/..."
-                      value={clubLogoUrl}
-                      onChange={(e) => setClubLogoUrl(e.target.value)}
-                      className="w-full glass-input rounded-xl p-3 text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs text-gray-400 font-medium">Short Description</label>
-                    <textarea
-                      placeholder="Describe your organization's theme, objectives, and events..."
-                      value={clubDesc}
-                      onChange={(e) => setClubDesc(e.target.value)}
-                      rows={3}
-                      className="w-full glass-input rounded-xl p-3 text-sm"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 font-semibold text-sm flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-brand-primary/10 transition-all"
-                  >
-                    <span>Register Organization</span>
-                    <Sparkles className="w-4 h-4" />
+                  <button onClick={handleFinishOnboarding} className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 text-xs font-bold cursor-pointer">
+                    Finish Onboarding
                   </button>
-                </form>
-              </div>
-            )}
-
-            {/* STEP 6: FIRST-TIME PING ONBOARDING (FOR STUDENTS) */}
-            {step === "pings" && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="font-display font-bold text-2xl text-white">Subscribe to Pings</h3>
-                  <p className="text-sm text-gray-400">Choose which categories you want notifications for. You only get pinged when updates happen here.</p>
                 </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-                <div className="flex flex-wrap gap-2.5 py-4">
-                  {categories.map((cat) => {
-                    const isSelected = selectedPings.includes(cat.id);
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => handlePingToggle(cat.id)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-full border text-xs font-semibold cursor-pointer transition-all ${
-                          isSelected
-                            ? "bg-brand-primary/20 text-white border-brand-primary shadow-lg shadow-brand-primary/15 scale-105"
-                            : "bg-white/5 text-gray-300 border-white/5 hover:border-white/10 hover:bg-white/10"
-                        }`}
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: cat.color }}
-                        ></span>
-                        <span>{cat.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 ml-1 text-brand-primary" />}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={handleFinishOnboarding}
-                  className="w-full bg-nebula hover:bg-nebula-hover text-white rounded-xl py-3 font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
-                >
-                  <span>Go to Dashboard Feed</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+      {/* ==========================================
+          FOOTER (Premium Editorial Footer)
+          ========================================== */}
+      <footer className="relative z-10 border-t border-white/5 bg-[#030307]/50 pt-20 pb-8 text-xs text-gray-500">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 pb-16">
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-primary to-brand-secondary flex items-center justify-center">
+                <span className="font-display font-black text-sm text-white">E</span>
               </div>
-            )}
+              <h2 className="font-display font-black text-sm tracking-widest text-white">EVENTVERSE</h2>
+            </div>
+            <p className="text-[11px] text-white/40 max-w-sm leading-relaxed">
+              EventVerse isolates and registers official college channels into neat, noise-free student networks. Keep campus coordination high-signal.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold tracking-widest uppercase text-white">Constellations</h4>
+            <div className="flex flex-col gap-2.5 text-[11px]">
+              <a href="#hero" className="hover:text-white transition-colors">Explore</a>
+              <a href="#search" className="hover:text-white transition-colors">Campuses</a>
+              <a href="#features" className="hover:text-white transition-colors">Safety Policies</a>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold tracking-widest uppercase text-white">Support</h4>
+            <div className="flex flex-col gap-2.5 text-[11px]">
+              <a href="mailto:support@eventverse.com" className="hover:text-white transition-colors">Developer Contact</a>
+              <a href="mailto:support@eventverse.com" className="hover:text-white transition-colors">Terms of Service</a>
+            </div>
           </div>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 w-full text-center py-6 border-t border-white/5 bg-[#040408]/60 text-xs text-gray-500">
-        <p>&copy; {new Date().getFullYear()} EventVerse Campus Networks. Built for College Hackathons.</p>
+        <div className="max-w-7xl mx-auto px-6 border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-semibold">
+          <p>&copy; {new Date().getFullYear()} EventVerse Campus Networks. Built for College Hackathons.</p>
+          <p className="text-brand-secondary tracking-widest uppercase">Every Campus is a Small Universe.</p>
+        </div>
       </footer>
+
     </div>
   );
 }
