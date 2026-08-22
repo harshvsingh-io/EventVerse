@@ -1,33 +1,4 @@
-// EventVerse Local Database & Supabase Fallback Client
-// Implements full database operations with localStorage persistence.
-// Simulates tenant isolation (RLS) based on college_id.
-
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-let supabaseInstance = null;
-if (typeof window !== "undefined" && supabaseUrl && supabaseKey) {
-  try {
-    const trimmedUrl = supabaseUrl.trim();
-    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
-      supabaseInstance = createClient(trimmedUrl, supabaseKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      });
-    } else {
-      console.warn("[Supabase] Invalid URL protocol. Must start with http:// or https://. Got:", trimmedUrl);
-    }
-  } catch (e) {
-    console.error("[Supabase] Failed to initialize client:", e);
-  }
-}
-
-export const supabase = supabaseInstance;
+import { supabase } from "./supabaseClient";
 
 export function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -71,6 +42,11 @@ export interface User {
   role: 'student' | 'club_admin' | 'college_admin' | 'super_admin';
   emailVerified: boolean;
   createdAt: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  authProvider: string;
+  isVerified: boolean;
 }
 
 export interface Club {
@@ -190,13 +166,13 @@ const DEFAULT_CATEGORIES: PingCategory[] = [
 
 const DEFAULT_USERS: User[] = [
   // Super Admin
-  { id: 'u-super', collegeId: 'c1', name: 'Super Admin', email: 'super@eventverse.com', role: 'super_admin', emailVerified: true, createdAt: new Date().toISOString() },
+  { id: 'u-super', collegeId: 'c1', name: 'Super Admin', email: 'super@eventverse.com', role: 'super_admin', emailVerified: true, createdAt: new Date().toISOString(), username: 'super_admin', avatarUrl: null, bio: 'Platform Overseer.', authProvider: 'email', isVerified: true },
   // MUJ users
-  { id: 'u-muj-admin', collegeId: 'c1', name: 'Dr. Ramesh Kumar', email: 'admin@jaipur.manipal.edu', role: 'college_admin', emailVerified: true, createdAt: new Date().toISOString() },
-  { id: 'u-coding-admin', collegeId: 'c1', name: 'Aarav Mehta', email: 'codingclub@jaipur.manipal.edu', role: 'club_admin', emailVerified: true, createdAt: new Date().toISOString() },
-  { id: 'u-music-admin', collegeId: 'c1', name: 'Riya Sen', email: 'musicclub@jaipur.manipal.edu', role: 'club_admin', emailVerified: true, createdAt: new Date().toISOString() },
-  { id: 'u-student1', collegeId: 'c1', name: 'Kabir Verma', email: 'kabir.verma@learner.manipal.edu', role: 'student', emailVerified: true, createdAt: new Date().toISOString() },
-  { id: 'u-student2', collegeId: 'c1', name: 'Ananya Sharma', email: 'ananya.sharma@learner.manipal.edu', role: 'student', emailVerified: true, createdAt: new Date().toISOString() }
+  { id: 'u-muj-admin', collegeId: 'c1', name: 'Dr. Ramesh Kumar', email: 'admin@jaipur.manipal.edu', role: 'college_admin', emailVerified: true, createdAt: new Date().toISOString(), username: 'ramesh_admin', avatarUrl: null, bio: 'Dean of Student Welfare.', authProvider: 'email', isVerified: true },
+  { id: 'u-coding-admin', collegeId: 'c1', name: 'Aarav Mehta', email: 'codingclub@jaipur.manipal.edu', role: 'club_admin', emailVerified: true, createdAt: new Date().toISOString(), username: 'aarav_coding', avatarUrl: null, bio: 'President of Coding Club.', authProvider: 'email', isVerified: true },
+  { id: 'u-music-admin', collegeId: 'c1', name: 'Riya Sen', email: 'musicclub@jaipur.manipal.edu', role: 'club_admin', emailVerified: true, createdAt: new Date().toISOString(), username: 'riya_music', avatarUrl: null, bio: 'Vocal Lead & President of Symphony.', authProvider: 'email', isVerified: true },
+  { id: 'u-student1', collegeId: 'c1', name: 'Kabir Verma', email: 'kabir.verma@learner.manipal.edu', role: 'student', emailVerified: true, createdAt: new Date().toISOString(), username: 'kabir_v', avatarUrl: null, bio: 'Tech enthusiast.', authProvider: 'email', isVerified: true },
+  { id: 'u-student2', collegeId: 'c1', name: 'Ananya Sharma', email: 'ananya.sharma@learner.manipal.edu', role: 'student', emailVerified: true, createdAt: new Date().toISOString(), username: 'ananya_s', avatarUrl: null, bio: 'Music and arts collector.', authProvider: 'email', isVerified: true }
 ];
 
 const DEFAULT_CLUBS: Club[] = [
@@ -300,6 +276,45 @@ class LocalDatabase {
     }
   }
 
+  constructor() {
+    if (typeof window !== 'undefined' && supabase) {
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            const mappedUser: User = {
+              id: profile.id,
+              collegeId: profile.college_id || '',
+              name: profile.full_name || profile.username,
+              email: profile.email || session.user.email || '',
+              role: profile.role,
+              emailVerified: profile.is_verified || false,
+              createdAt: profile.created_at,
+              username: profile.username,
+              avatarUrl: profile.avatar_url,
+              bio: profile.bio,
+              authProvider: profile.auth_provider,
+              isVerified: profile.is_verified || false
+            };
+            this.setCurrentUser(mappedUser);
+            const users = this.getUsers();
+            if (!users.some(u => u.id === mappedUser.id)) {
+              users.push(mappedUser);
+              this.setStorageItem('ev_users', users);
+            }
+          }
+        } else {
+          this.setCurrentUser(null);
+        }
+      });
+    }
+  }
+
   private setStorageItem<T>(key: string, value: T): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem(key, JSON.stringify(value));
@@ -334,7 +349,7 @@ class LocalDatabase {
     try {
       const results = await Promise.allSettled([
         supabase.from("colleges").select("*"),
-        supabase.from("users").select("*"),
+        supabase.from("profiles").select("*"),
         supabase.from("clubs").select("*"),
         supabase.from("ping_categories").select("*"),
         supabase.from("events").select("*"),
@@ -376,11 +391,16 @@ class LocalDatabase {
         this.setStorageItem('ev_users', usersData.map((u: any) => ({
           id: u.id,
           collegeId: u.college_id,
-          name: u.name,
+          name: u.full_name || u.username,
           email: u.email,
           role: u.role,
-          emailVerified: u.email_verified,
-          createdAt: u.created_at
+          emailVerified: u.is_verified || false,
+          createdAt: u.created_at,
+          username: u.username,
+          avatarUrl: u.avatar_url,
+          bio: u.bio,
+          authProvider: u.auth_provider,
+          isVerified: u.is_verified || false
         })));
       }
       if (clubsData.length > 0) {
@@ -519,16 +539,20 @@ class LocalDatabase {
         return !matching || JSON.stringify(matching) !== JSON.stringify(item);
       });
       diff.forEach(item => {
-        supabase.from('users').upsert({
+        supabase.from('profiles').upsert({
           id: toUUID(item.id),
-          college_id: toUUID(item.collegeId),
-          name: item.name,
+          username: item.username || item.name.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+          full_name: item.name,
           email: item.email,
           role: item.role,
-          email_verified: item.emailVerified,
+          college_id: item.collegeId ? toUUID(item.collegeId) : null,
+          avatar_url: item.avatarUrl,
+          bio: item.bio,
+          auth_provider: item.authProvider || 'email',
+          is_verified: item.isVerified || false,
           created_at: item.createdAt
         }).then(res => {
-          if (res.error) console.error("Supabase upsert users error:", res.error);
+          if (res.error) console.error("Supabase upsert profiles error:", res.error);
         });
       });
     }
@@ -774,10 +798,7 @@ class LocalDatabase {
     const session = localStorage.getItem('ev_session');
     if (!session) return null;
     try {
-      const parsed = JSON.parse(session);
-      // Verify user still exists in the local database
-      const users = this.getUsers();
-      return users.find(u => u.id === parsed.id) || null;
+      return JSON.parse(session) as User;
     } catch {
       return null;
     }
@@ -839,7 +860,12 @@ class LocalDatabase {
       email,
       role: 'student',
       emailVerified: true, // Auto verify for demo after signup
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      username: name.toLowerCase().replace(/[^a-z0-9_]/g, '_') || "student",
+      avatarUrl: null,
+      bio: null,
+      authProvider: 'email',
+      isVerified: false
     };
 
     users.push(newUser);

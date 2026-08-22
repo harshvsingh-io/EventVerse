@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "College event info is scattered. EventVerse gives every college its own isolated, notification-powered event universe.",
 };
 
+import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
+
 export default function RootLayout({
   children,
 }: {
@@ -25,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full bg-[#06060c] text-[#f5f5f7] font-sans antialiased selection:bg-brand-primary/30 selection:text-white">
-        {children}
+        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
       </body>
     </html>
   );

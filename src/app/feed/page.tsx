@@ -129,7 +129,6 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-[#06060c] text-white flex flex-col">
-      <Header />
 
       {/* Share Toast */}
       {shareToast && (
@@ -182,7 +181,7 @@ export default function FeedPage() {
                 onClick={() => setSelectedCategory(null)}
                 className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
                   selectedCategory === null
-                    ? "bg-white text-black border-white"
+                    ? "bg-brand-primary/15 text-brand-primary border-brand-primary/30 shadow-lg shadow-brand-primary/5"
                     : "bg-white/5 text-gray-300 border-white/5 hover:border-white/10"
                 }`}
               >
@@ -192,11 +191,21 @@ export default function FeedPage() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer"
+                  style={
                     selectedCategory === cat.id
-                      ? "bg-white text-black border-white"
-                      : "bg-white/5 text-gray-300 border-white/5 hover:border-white/10"
-                  }`}
+                      ? {
+                          borderColor: `${cat.color}50`,
+                          backgroundColor: `${cat.color}15`,
+                          color: cat.color,
+                          boxShadow: `0 4px 12px 0 ${cat.color}10`
+                        }
+                      : {
+                          borderColor: "rgba(255, 255, 255, 0.05)",
+                          backgroundColor: "rgba(255, 255, 255, 0.05)",
+                          color: "#d1d5db"
+                        }
+                  }
                 >
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></span>
                   <span>{cat.name}</span>
@@ -230,7 +239,7 @@ export default function FeedPage() {
               ))}
             </div>
           ) : filteredEvents.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-8 max-w-lg mx-auto">
               {filteredEvents.map((event) => {
                 const club = clubs.find(c => c.id === event.clubId);
                 const category = categories.find(c => c.id === event.pingCategoryId);
@@ -238,9 +247,9 @@ export default function FeedPage() {
                 const isSaved = saves.includes(event.id);
 
                 return (
-                  <article key={event.id} className="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                  <article key={event.id} className="glass-card rounded-2xl overflow-hidden border border-white/5 space-y-3.5 pb-5">
                     {/* Header: Club info, Badge, Time */}
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between px-4 pt-4">
                       <div className="flex items-center gap-3">
                         <img
                           src={club?.logoUrl || "https://images.unsplash.com/photo-1618401471353-b98aedd07871?w=100&auto=format&fit=crop&q=60"}
@@ -248,8 +257,8 @@ export default function FeedPage() {
                           className="w-9 h-9 rounded-full object-cover border border-white/10"
                         />
                         <div>
-                          <div className="flex items-center gap-1">
-                            <h4 className="font-semibold text-xs text-white">{club?.name || "College Club"}</h4>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="font-semibold text-xs text-white hover:underline cursor-pointer" onClick={() => router.push(`/profile/${club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'club'}`)}>{club?.name || "College Club"}</h4>
                             <span className="w-3.5 h-3.5 rounded-full bg-brand-secondary/20 flex items-center justify-center border border-brand-secondary/30 text-brand-secondary" title="Official Verified Club">
                               <Check className="w-2 h-2 stroke-[3]" />
                             </span>
@@ -263,7 +272,7 @@ export default function FeedPage() {
                       {/* Category Badge */}
                       {category && (
                         <div
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-semibold tracking-wider uppercase"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-bold tracking-wider uppercase"
                           style={{
                             borderColor: `${category.color}40`,
                             backgroundColor: `${category.color}15`,
@@ -276,96 +285,86 @@ export default function FeedPage() {
                       )}
                     </div>
 
-                    {/* Title */}
-                    <h3 
-                      onClick={() => router.push(`/events/${event.id}`)}
-                      className="font-display font-bold text-xl sm:text-2xl text-white hover:text-brand-secondary transition-colors cursor-pointer leading-snug"
-                    >
-                      {event.title}
-                    </h3>
-
-                    {/* Banner Image (1080x1350 aspect-[4/5]) */}
+                    {/* Banner Image (Instagram vertical 4:5 aspect ratio) */}
                     {event.bannerImageUrl && (
                       <div 
                         onClick={() => router.push(`/events/${event.id}`)}
-                        className="relative aspect-[4/5] max-h-[550px] w-full rounded-xl overflow-hidden border border-white/5 cursor-pointer bg-gray-950 flex items-center justify-center group"
+                        className="relative aspect-[4/5] w-full overflow-hidden border-y border-white/5 cursor-pointer bg-black/40 flex items-center justify-center group"
                       >
                         <img
                           src={event.bannerImageUrl}
                           alt={event.title}
-                          className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#06060c]/40 via-transparent to-transparent"></div>
                       </div>
                     )}
 
-                    {/* Description excerpt */}
-                    <p className="text-xs text-gray-300 leading-relaxed line-clamp-2">
-                      {event.description}
-                    </p>
-
-                    {/* Metadata: Date & Venue */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-brand-primary" />
-                        <span>{new Date(event.eventDate).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-brand-secondary" />
-                        <span className="truncate">{event.venue}</span>
-                      </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                      {/* Left: Like & Comment */}
-                      <div className="flex items-center gap-4 sm:gap-6">
+                    {/* Action Row */}
+                    <div className="flex items-center justify-between px-4">
+                      <div className="flex items-center gap-4">
                         <button
                           onClick={() => handleToggleLike(event.id)}
-                          className={`flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-                            isLiked ? "text-pink-500" : "text-gray-400 hover:text-white"
-                          }`}
+                          className="group p-1 -ml-1 transition-all active:scale-90 cursor-pointer text-gray-300 hover:text-white"
                         >
-                          <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                          <span>{event.likesCount || 0}</span>
+                          <Heart className={`w-6 h-6 transition-transform group-hover:scale-105 ${isLiked ? 'text-pink-500 fill-current scale-110' : ''}`} />
                         </button>
 
                         <button
                           onClick={() => router.push(`/events/${event.id}`)}
-                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                          className="p-1 transition-all active:scale-90 cursor-pointer text-gray-300 hover:text-white"
                         >
-                          <MessageSquare className="w-4 h-4" />
-                          <span>{event.commentsCount || 0}</span>
+                          <MessageSquare className="w-6 h-6" />
                         </button>
 
                         <button
                           onClick={() => handleShare(event)}
-                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                          className="p-1 transition-all active:scale-90 cursor-pointer text-gray-300 hover:text-white"
                         >
-                          <Share2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Share</span>
+                          <Share2 className="w-6 h-6" />
                         </button>
                       </div>
 
-                      {/* Right: Save & Register */}
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => handleToggleSave(event.id)}
-                          className={`p-2 rounded-lg border transition-colors cursor-pointer ${
-                            isSaved
-                              ? "bg-brand-primary/10 border-brand-primary text-brand-primary"
-                              : "bg-transparent border-white/5 text-gray-400 hover:text-white hover:border-white/10"
-                          }`}
-                        >
-                          <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                        </button>
+                      <button
+                        onClick={() => handleToggleSave(event.id)}
+                        className="p-1 -mr-1 transition-all active:scale-90 cursor-pointer text-gray-300 hover:text-white"
+                      >
+                        <Bookmark className={`w-6 h-6 ${isSaved ? 'text-brand-primary fill-current' : ''}`} />
+                      </button>
+                    </div>
 
+                    {/* Captions / Details */}
+                    <div className="px-4 space-y-2">
+                      <div className="text-xs font-bold text-white tracking-wide">
+                        {event.likesCount || 0} {(event.likesCount || 0) === 1 ? 'like' : 'likes'}
+                      </div>
+
+                      <div className="text-xs text-gray-200 leading-relaxed">
+                        <span className="font-bold text-white mr-2 hover:underline cursor-pointer" onClick={() => router.push(`/profile/${club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '_') || 'club'}`)}>
+                          {club?.name.toLowerCase().replace(/[^a-z0-9_]/g, '') || "club"}
+                        </span>
+                        <span className="font-semibold text-white block text-sm mt-1">{event.title}</span>
+                        <p className="text-gray-400 mt-1 line-clamp-2">{event.description}</p>
+                      </div>
+
+                      <div className="text-[10px] text-gray-500 font-semibold tracking-wider uppercase space-y-0.5 border-t border-white/5 pt-2">
+                        <div>📅 {new Date(event.eventDate).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        <div>📍 {event.venue}</div>
+                      </div>
+
+                      <div className="pt-2 flex gap-3">
+                        <button
+                          onClick={() => router.push(`/events/${event.id}`)}
+                          className="flex-1 bg-white/5 hover:bg-white/10 text-white text-xs font-bold py-2 rounded-lg border border-white/5 transition-all text-center cursor-pointer"
+                        >
+                          View Details & Comments
+                        </button>
                         {event.registrationLink && (
                           <a
                             href={event.registrationLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-nebula hover:bg-nebula-hover text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1"
+                            className="flex-1 bg-nebula hover:bg-nebula-hover text-white text-xs font-bold py-2 rounded-lg transition-all text-center flex items-center justify-center gap-1 shadow-lg shadow-brand-primary/10"
                           >
                             <span>Register</span>
                             <ArrowUpRight className="w-3.5 h-3.5" />

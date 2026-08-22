@@ -91,13 +91,13 @@ export default function Header() {
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex items-center gap-1 bg-white/5 border border-white/5 rounded-full p-1 text-xs">
+        <nav className="flex items-center gap-1.5 bg-white/3 border border-white/5 rounded-full p-1 text-xs shadow-inner">
           <button
             onClick={() => router.push("/feed")}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
               pathname === "/feed"
-                ? "bg-brand-primary text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white shadow-md shadow-brand-primary/10 scale-102"
+                : "text-gray-400 hover:text-gray-200 hover:bg-white/3"
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
@@ -106,10 +106,10 @@ export default function Header() {
           
           <button
             onClick={() => router.push("/community")}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
               pathname === "/community"
-                ? "bg-brand-primary text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white shadow-md shadow-brand-primary/10 scale-102"
+                : "text-gray-400 hover:text-gray-200 hover:bg-white/3"
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -118,10 +118,10 @@ export default function Header() {
 
           <button
             onClick={() => router.push("/settings")}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
               pathname === "/settings"
-                ? "bg-brand-primary text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-gradient-to-r from-brand-primary to-brand-primary/80 text-white shadow-md shadow-brand-primary/10 scale-102"
+                : "text-gray-400 hover:text-gray-200 hover:bg-white/3"
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -136,30 +136,30 @@ export default function Header() {
           {currentUser.role === "club_admin" && (
             <button
               onClick={() => router.push("/dashboard/club")}
-              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 text-gray-200 py-1.5 px-3 rounded-lg border border-white/10"
+              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/8 text-gray-200 py-1.5 px-3.5 rounded-xl border border-white/10 transition-all hover:scale-102 active:scale-98 cursor-pointer hover:border-brand-primary/40 shadow-sm"
             >
               <PlusCircle className="w-3.5 h-3.5 text-brand-primary" />
-              <span>Club Panel</span>
+              <span className="font-semibold">Club Panel</span>
             </button>
           )}
 
           {currentUser.role === "college_admin" && (
             <button
               onClick={() => router.push("/dashboard/college")}
-              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 text-gray-200 py-1.5 px-3 rounded-lg border border-white/10"
+              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/8 text-gray-200 py-1.5 px-3.5 rounded-xl border border-white/10 transition-all hover:scale-102 active:scale-98 cursor-pointer hover:border-brand-secondary/40 shadow-sm"
             >
               <Shield className="w-3.5 h-3.5 text-brand-secondary" />
-              <span>College Admin</span>
+              <span className="font-semibold">College Admin</span>
             </button>
           )}
 
           {currentUser.role === "super_admin" && (
             <button
               onClick={() => router.push("/dashboard/super")}
-              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 text-gray-200 py-1.5 px-3 rounded-lg border border-white/10"
+              className="hidden md:flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/8 text-gray-200 py-1.5 px-3.5 rounded-xl border border-white/10 transition-all hover:scale-102 active:scale-98 cursor-pointer hover:border-pink-500/40 shadow-sm"
             >
               <Shield className="w-3.5 h-3.5 text-pink-500" />
-              <span>Super Admin</span>
+              <span className="font-semibold">Super Admin</span>
             </button>
           )}
 

@@ -141,7 +141,12 @@ export default function CollegeDashboard() {
       email: newClubEmail,
       role: 'club_admin',
       emailVerified: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      username: newClubAdminName.toLowerCase().replace(/[^a-z0-9_]/g, '_') || "club_admin",
+      avatarUrl: null,
+      bio: null,
+      authProvider: 'email',
+      isVerified: false
     };
 
     const newClubId = generateUUID();

@@ -97,7 +97,12 @@ export default function SuperDashboard() {
       email: adminEmail,
       role: 'college_admin',
       emailVerified: true,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      username: adminName.toLowerCase().replace(/[^a-z0-9_]/g, '_') || "college_admin",
+      avatarUrl: null,
+      bio: null,
+      authProvider: 'email',
+      isVerified: false
     };
 
     currentColleges.push(newCollege);
